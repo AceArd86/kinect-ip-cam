@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kinect IP Cam Control Panel</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        body {
+            background: #111;
+            color: #ddd;
+            font-family: Segoe UI, Arial, sans-serif;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #222;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 0 16px #000a;
+        }
+
+        h2 {
+            color: #aaffaa;
+            margin: 0 0 14px;
+        }
+
+        .liveview {
+            display: block;
+            margin: 0 auto 16px;
+            max-width: 100%;
+            border-radius: 6px;
+            background: #000;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+            .controls button, .controls input[type=range] {
+                background: #2a2a2a;
+                color: #eee;
+                border: 1px solid #3a3a3a;
+                border-radius: 6px;
+                padding: 8px 12px;
+            }
+
+        .status {
+            margin-top: 12px;
+            background: #181;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type=range] {
+            width: 180px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Kinect IP Cam</h2>
+
+        <img id="liveview" class="liveview" src="/latest.jpg" alt="Live View" />
+
+        <div class="controls">
+            <button onclick="setMode('RGB')">Color</button>
+            <button onclick="setMode('IR')">IR</button>
+            <button onclick="toggleAutoNight()">Auto Night</button>
+            <button onclick="toggleTint()">Tint</button>
+            <button onclick="toggleSmooth()">Smooth</button>
+            <label>JPEG <input type="range" id="jpegQuality" min="30" max="95" step="1" onchange="setJpegQuality(this.value)"></label>
+            <button onclick="takeSnapshot()">Snapshot</button>
+            <button onclick="recordAudio()">Record 6s</button>
+            <button onclick="playLast()">Play last</button>
+            <button onclick="tilt('up')">Tilt ▲</button>
+            <button onclick="tilt('down')">Tilt ▼</button>
+        </div>
+
+        <audio id="aud" controls></audio>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <!-- bump v= number when you edit ui.js -->
+    <script src="/scripts/ui.js?v=10"></script>
+    <script>
+        // Live view auto-refresh (reliable through Cloudflare)
+        setInterval(() => {
+            document.getElementById('liveview').src = '/latest.jpg?' + Date.now();
+        }, 600);
+    </script>
+</body>
+</html>
