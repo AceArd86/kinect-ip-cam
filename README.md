@@ -39,8 +39,8 @@ Turn a **Kinect for Xbox 360** into a simple IP camera with a web UI, IR "night 
 
    **PowerShell (user scope)**
    ```powershell
-   [System.Environment]::SetEnvironmentVariable("KINECTCAM_USER","myuser","User")
-   [System.Environment]::SetEnvironmentVariable("KINECTCAM_PASS","mypassword","User")
+   [System.Environment]::SetEnvironmentVariable("KINECTCAM_USER","kinect","User")
+   [System.Environment]::SetEnvironmentVariable("KINECTCAM_PASS","changeme","User")
 
 Endpoints
 Path	Method	Description:
