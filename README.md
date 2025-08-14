@@ -1,119 +1,174 @@
-# SecurityCam
+README.md
+Kinect IP Cam (Xbox 360 Kinect)
 
-Turn a **Kinect for Xbox 360** into a simple IP camera with a web UI, IR "night mode", motion snapshots, audio clips, and tilt control — all in a single .NET Framework console app.
+Turn an old Xbox 360 Kinect into a simple IP camera with night (IR) mode, motion snapshots, short audio clips, and a web UI.
 
-> ⚠️ This targets **.NET Framework 4.7.2** and **Kinect SDK v1.8** (Microsoft.Kinect). Windows only.
+https://github.com/AceArd86/kinect-ip-cam
 
----
+Features
 
-## Features
+RGB and Infrared (IR) live view (auto day/night switch optional)
 
-- **Web UI** (`/ui`) with buttons & slider (Color / IR, Auto Night, Tint, Smooth, JPEG quality)
-- **Live view** as **MJPEG** (`/stream`) or single JPG (`/latest.jpg`)
-- **Auto Night**: switches RGB ↔ IR based on scene brightness
-- **IR rendering**: grayscale (default) with optional green tint + smoothing
-- **Motorized tilt**: ▲/▼ buttons or API control (`tilt`, `tiltAbs`)
-- **Motion-triggered snapshots** using the depth stream
-- **Audio recorder**: capture 6–30s WAV from the Kinect mic array
-- **Basic Auth** on the web endpoints (username/password via environment variables)
-- **Snapshot & audio history** served from the `captures/` folder
+MJPEG stream (/stream) + latest JPEG (/latest.jpg)
 
----
+Motion-triggered snapshots (saved to captures/)
 
-## Requirements
+Short WAV recordings on motion or on demand
 
-- **Hardware**: Kinect for Xbox 360 (v1) + USB/power adapter
-- **OS**: Windows 10/11
-- **SDK**: [Kinect for Windows SDK v1.8](https://www.microsoft.com/en-us/download/details.aspx?id=40278)
-- **Dev**: Visual Studio 2019/2022 with **.NET Framework 4.7.2** targeting pack
+Web UI (/ui) with controls (mode, auto-night, tint, smoothing, JPEG quality, tilt, snapshot, record)
 
-> This app uses the Microsoft.Kinect library from the SDK; do **not** commit the SDK DLLs to the repo.
+Basic Auth (set via environment variables)
 
----
+Optional tilt control (Kinect motor)
 
-## Quick Start
+Automatic cleanup of old media
 
-1. Install **Kinect SDK v1.8**. Plug in Kinect (motor light briefly blinks; drivers should load).
-2. Clone this repo, open the solution in **Visual Studio**, make sure the project targets **.NET Framework 4.7.2**.
-3. Set credentials as **environment variables** (so you don’t commit secrets):
+Requirements
 
-   **PowerShell (user scope)**
-   ```powershell
-   [System.Environment]::SetEnvironmentVariable("KINECTCAM_USER","kinect","User")
-   [System.Environment]::SetEnvironmentVariable("KINECTCAM_PASS","changeme","User")
+Windows + Kinect for Xbox 360 sensor
+
+Kinect for Windows SDK v1.8
+
+.NET Framework 4.7.2 (your project already targets this)
+
+Quick start (90 seconds)
+
+1) Set login (environment variables) — run in PowerShell once:
+
+setx KINECTCAM_USER "kinect"
+setx KINECTCAM_PASS "change-me"
+
+
+Open a new terminal/VS after setting them.
+
+2) Grant the local HTTP URL once (admin PowerShell):
+
+netsh http add urlacl url=http://+:8080/ user=Everyone
+
+
+3) Build & run
+
+Debug or Release from Visual Studio
+
+Open: http://localhost:8080/ui
+(You’ll be prompted for the Basic Auth user/pass you set above.)
 
 Endpoints
-Path	Method	Description:
-  /ui	GET	Web control panel (HTML/JS)
-  /stream	GET	MJPEG live stream
-  /latest.jpg	GET	Latest frame as JPEG
-  /last.wav	GET	Last recorded audio clip
-  /captures/*.jpg/.wav	GET	Saved snapshots and audio files
-  /api/status	GET	JSON with current state (mode, flags, thresholds, JPEG, last files, tilt)
-  /api/set?...	GET	Apply settings (see below)
-  /api/set query parameters
+Endpoint	Description
+/ui	Web control panel
+/stream	MJPEG live video
+/latest.jpg	Last frame as JPEG
+`/captures/*.jpg	*.wav`
+/api/status	Get current status (JSON) and/or set options using query params below
+/api/status query params (GET)
 
-Mode & flags:
-  mode=rgb|ir
-  auto=toggle|true|false
-  tint=toggle|green|gray
-  smooth=toggle|true|false
+Mode: mode=rgb or mode=ir
 
-Quality & thresholds:
-  jpeg=10..100
-  night=0..100 (IR switch-on luma)
-  day=0..100 (IR→RGB switch-back luma; must be > night)
+Auto night: auto=toggle or auto=0|1
 
-Capture:
-  snap=1 (save snapshot immediately)
-  record=1..30 (record N seconds of audio)
+IR tint: tint=toggle or tint=green|gray
 
-Tilt:
-  tilt=up|down|+2|-2 (relative; step is clamped and rate-limited)
-  tiltAbs=-7 (absolute degrees; clamped to Kinect range, typically -27..+27)
+IR smooth: smooth=toggle or smooth=0|1
 
-Examples:
-  /api/set?mode=ir&jpeg=70
-  /api/set?auto=toggle
-  /api/set?snap=1
-  /api/set?record=6
-  /api/set?tilt=down
-  /api/set?tiltAbs=10
+Quality: jpeg=10..100
 
-Web UI:
-  Color / IR – switch video source
-  Auto Night – auto-switch based on brightness
-  Tint / Smooth – IR rendering controls
-  JPEG Quality – trade bandwidth for clarity
-  Take Snapshot – saves to captures/
-  Record Audio – captures WAV to captures/
-  Tilt ▲/▼ – moves the Kinect motor (cooldown ~800ms). Status shows Tilt: N°
+Thresholds: night=0..100, day=0..100 (day must be > night)
 
-I'f the UI doesn’t reflect new JS, force refresh: /ui?v=2, Ctrl+F5, or clear cache.
+Snapshot: snap=1
 
-Hotkeys (console window):
-  I – switch to IR
-  C – switch to Color
-  A – toggle Auto Night
-  T – toggle IR Tint
-  S – toggle IR smoothing
-  Q/W – JPEG quality down/up
+Record: record=1..30 (seconds)
 
-Port Forwarding / Remote Access (optional):
-  LAN only: open http://<PC-IP>:8080/ui from your phone on Wi-Fi.
-  Remote (simplest): use Cloudflare Tunnel to expose http://localhost:8080 to a public hostname with auth in front.
-  Router port forward: forward TCP 8080 to your PC’s LAN IP, and allow in Windows Firewall. Strongly recommended to keep Basic Auth enabled and use HTTPS/CF tunnel if exposing to the internet.
+Tilt: tilt=up|down|±N or tiltAbs=N (clamped to Kinect’s min/max)
 
-Troubleshooting:
-  “HTTP bind failed on http://+:8080/” → run:
-  netsh http add urlacl url=http://+:8080/ user=Everyone
-  401 / auth popup loops → check KINECTCAM_USER/PASS env vars; restart VS/console after setting.
-  Black image or no frames → ensure Kinect SDK 1.8 is installed; check Device Manager; try another USB port/power.
-  IR looks noisy → enable Smooth in UI; try Tint off (grayscale).
-  UI not updating → reload with /ui?v=2 (cache bust).
-  Tilt not moving → Kinect v1 range is ~-27..+27; there’s a short cooldown between moves.
+Examples
 
-Security notes:
-  Credentials are not stored in code/repo; set via env vars.
-  When exposing publicly, prefer Cloudflare Tunnel or a TLS reverse proxy.
-  Keep captures/ in .gitignore — it can contain sensitive imagery/audio.
+# Switch to IR
+curl -u kinect:change-me "http://localhost:8080/api/status?mode=ir"
+
+# Toggle auto-night
+curl -u kinect:change-me "http://localhost:8080/api/status?auto=toggle"
+
+# Set JPEG quality to 70
+curl -u kinect:change-me "http://localhost:8080/api/status?jpeg=70"
+
+# Take a snapshot
+curl -u kinect:change-me "http://localhost:8080/api/status?snap=1"
+
+# Record 6 seconds of audio
+curl -u kinect:change-me "http://localhost:8080/api/status?record=6"
+
+# Tilt up 2 degrees
+curl -u kinect:change-me "http://localhost:8080/api/status?tilt=+2"
+
+# Absolute tilt -7
+curl -u kinect:change-me "http://localhost:8080/api/status?tiltAbs=-7"
+
+Hotkeys (console)
+I = IR        C = Color
+A = AutoNight T = Tint (IR green/gray)
+S = IR smooth Q/W = JPEG quality -/+
+
+HTTPS / Remote access (optional)
+
+If you want to access the UI over the internet, put it behind TLS. Easiest is a tunnel (e.g., Cloudflare Tunnel) pointing to http://localhost:8080. Keep Basic Auth enabled and use a strong password.
+
+Dev / Build
+
+Target framework: .NET Framework 4.7.2
+
+Kinect SDK: v1.8
+
+Build: standard Visual Studio build (Debug/Release)
+
+Troubleshooting
+
+Port in use / bind fails: change MJPEG_PORT in code, or free the port.
+
+401 repeatedly: environment variables not loaded? Restart VS/terminal or verify with:
+
+[System.Environment]::GetEnvironmentVariable("KINECTCAM_USER","Machine")
+
+
+No video: ensure the Kinect is powered (separate power brick) and recognized in Device Manager.
+
+Tilt not moving: some sensors report the angle but can’t move; also there’s a cooldown to protect the motor.
+
+License
+
+MIT (see LICENSE)
+
+Security notes
+
+Uses Basic Auth (username/password). Don’t expose it publicly without HTTPS.
+
+Credentials should be provided via environment variables (see below). Avoid committing secrets.
+
+Environment variables
+
+Environment variables override any defaults in code:
+
+KINECTCAM_USER — Basic Auth username
+
+KINECTCAM_PASS — Basic Auth password
+
+You can also add an _env.example (below) and document it, but don’t commit real credentials.
+
+_env.example
+KINECTCAM_USER=kinect
+KINECTCAM_PASS=change-me
+
+
+On Windows, this is just for documentation; the app reads environment variables from the system (set with setx).
+
+.gitignore additions
+
+Add these lines so your repo doesn’t fill with media:
+
+# App media output
+captures/
+
+Credits
+
+Xbox 360 Kinect + Kinect SDK v1.8
+
+IR grayscale mapping, UI and motion/audio glue by @AceArd86
