@@ -69,6 +69,29 @@ ScaffoldingReadMe.txt
 # StyleCop
 StyleCopReport.xml
 
+# --- SecurityCam project specific ---
+# Don’t publish recordings / snapshots
+captures/
+captures/**
+
+# Local Cloudflare tunnel / misc local configs
+cloudflared/
+cloudflared/**
+
+# Local env files (if you ever use them)
+.env
+.env.*
+*.env
+
+# Your local helper that sets env vars (commit an example instead)
+setenv.ps1
+setenv.sh
+
+# OS cruft (in case you edit the repo on other machines)
+Thumbs.db
+.DS_Store
+
+
 # Files built by Visual Studio
 *_i.c
 *_p.c
